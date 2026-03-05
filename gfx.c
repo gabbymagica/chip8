@@ -10,9 +10,9 @@ void print_gfx(uint8_t gfx[]) {
             printf("\n");
         }
         if (gfx[i] == 0) {
-            printf(" ");
+            printf("  ");
         } else if (gfx[i] == 1) {
-            printf("X");
+            printf("██");
         }
     };
 }

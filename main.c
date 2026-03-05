@@ -7,6 +7,10 @@
 #define START_ADDRESS 0x200
 #define FONTSET_START_ADDRESS 0x50
 
+void reset_cursor() {
+    printf("\033[H\033[J");
+}
+
 int main() {
     FILE *file = fopen("IBM Logo.ch8", "rb");
 
@@ -131,6 +135,7 @@ int main() {
                 break;
         }
 
+        reset_cursor();
         print_gfx(gfx);
 
         // não passa do tamanho da rom, teoricamente o máximo
