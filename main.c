@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <time.h>
-#include <unistd.h>
+#include <windows.h>
 
 #define START_ADDRESS 0x200
 #define FONTSET_START_ADDRESS 0x50
@@ -18,7 +18,7 @@ void reset_cursor() {
 }
 
 int main() {
-    FILE *file = fopen("IBM Logo.ch8", "rb");
+    FILE *file = fopen("roms/Pong.ch8", "rb");
 
     if (file == NULL) {
         printf("Erro lendo IBM Logo.ch8\n");
@@ -309,10 +309,7 @@ int main() {
                 switch ((opcode & 0x000F)) {
                     case 0x7:
                         registers[(opcode & 0x0F00) >> 8] = delay_timer;
-                        break;
-                    case 0x5:
-                        delay_timer = (opcode & 0x0F00) >> 8;
-                        break;
+                        break;                
                     case 0x8:
                         sound_timer = (opcode & 0x0F00) >> 8;
                         break;
@@ -334,15 +331,40 @@ int main() {
                         break;
                     case 0x3:
                         {
-                            
+                            uint8_t value = registers[(opcode & 0x0F00) >> 8];
+                            memory[index_register] = value / 100;
+                            memory[index_register + 1] = (value / 10) % 10;
+                            memory[index_register + 2] = value % 10;
                         }
-
+                        break;  
+                    default:
+                        switch ((opcode & 0x00FF)) {
+                            case 0x15:
+                                // FX15
+                                delay_timer = registers[(opcode & 0x0F00) >> 8];
+                                break;
+                            case 0x55:
+                                // FX55
+                                for (uint8_t i = 0; i <= (opcode & 0x0F00) >> 8; i++) {
+                                    memory[index_register + i] = registers[i];
+                                }
+                                break;
+                            case 0x65:
+                                // FX65
+                                for (uint8_t i = 0; i <= (opcode & 0x0F00) >> 8; i++) {
+                                    registers[i] = memory[index_register + i];
+                                }
+                                break;
+                        }
+                        break;
                 }
                 break;
             default:
                 //printf("não implementado.\n");
                 break;
         }
+
+       
 
         if (delay_timer > 0)
         {
@@ -362,7 +384,10 @@ int main() {
         reset_cursor();
         printf("%s", print_buffer); 
 
-        usleep(16660);
+        // linux: 
+        // usleep(16660);
+        // windows:
+        Sleep(1);
 
         // não passa do tamanho da rom, teoricamente o máximo
         if (pc >= START_ADDRESS + size) {
