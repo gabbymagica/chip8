@@ -17,6 +17,26 @@ void print_gfx(uint8_t gfx[]) {
     };
 }
 
+void gfx_to_print_buffer(uint8_t gfx[], char* print_buffer) {
+    int buffer_idx = 0;
+
+    for (int y = 0; y < 32; y++) {
+        for (int x = 0; x < 64; x++) {
+            uint8_t pixel = gfx[get_gfx_pos(x, y)];
+
+            if (pixel) {
+                print_buffer[buffer_idx++] = 'X'; 
+                print_buffer[buffer_idx++] = 'X';
+            } else {
+                print_buffer[buffer_idx++] = ' ';
+                print_buffer[buffer_idx++] = ' ';
+            }
+        }
+        print_buffer[buffer_idx++] = '\n';
+    }
+    print_buffer[buffer_idx] = '\0';
+}
+
 int draw_gfx(uint8_t gfx[], uint8_t x, uint8_t y, uint8_t n, uint8_t* index_register_ptr_on_memory) {
     x = x % 64;
     y = y % 32;
