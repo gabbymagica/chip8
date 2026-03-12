@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <time.h>
-#include <windows.h>
+#include <unistd.h>
 
 #define START_ADDRESS 0x200
 #define FONTSET_START_ADDRESS 0x50
@@ -17,8 +17,12 @@ void reset_cursor() {
     printf("\033[H\033[J");
 }
 
-int main() {
-    FILE *file = fopen("roms/Pong.ch8", "rb");
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        printf("Erro executando o programa, execute com ./main <diretorio_rom>");
+        return 1;
+    }
+    FILE *file = fopen(argv[1], "rb");
 
     if (file == NULL) {
         printf("Erro lendo IBM Logo.ch8\n");
@@ -95,6 +99,12 @@ int main() {
     free(buffer);
 
     for (;;) {
+        // pega o input logo no início (melhor pra poder evitar de perder inputs enquanto processa outras coisas)
+        char input = get_input();
+
+        // deve desenhar a tela (se houve mudanças nela)
+        bool should_draw = false;
+
         // fetch
         // pega os dois bytes na memória, que equivalem a 2*8 = 16 bits, um opcode hexadecimal
         uint16_t opcode = (memory[pc] << 8) | memory[pc+1]; 
@@ -113,6 +123,7 @@ int main() {
         switch (opcode) {
             case 0x00E0:
                 clear_gfx(gfx);
+                should_draw = true;
                 break;
             case 0x00EE:
                 sp--;
@@ -290,16 +301,17 @@ int main() {
                     (opcode & 0xF), 
                     &memory[index_register]
                 );
+                should_draw = true;
                 break;
             case 0xE:
                 switch ((opcode & 0x000F)) {
                     case 0xE:
-                        if (registers[(opcode & 0x0F00) >> 8] == get_input()) {
+                        if (registers[(opcode & 0x0F00) >> 8] == input) {
                             pc += 2;
                         }
                         break;
                     case 0x1:
-                        if (registers[(opcode & 0x0F00) >> 8] != get_input()) {
+                        if (registers[(opcode & 0x0F00) >> 8] != input) {
                             pc += 2;
                         }
                         break;
@@ -318,12 +330,11 @@ int main() {
                         break;
                     case 0xA:
                         {
-                            char ch = get_input();
-                            if (ch == -1) {
+                            if (input == -1) {
                                 pc -= 2;
                                 break;
                             }
-                            registers[(opcode & 0x0F00) >> 8] = ch;
+                            registers[(opcode & 0x0F00) >> 8] = input;
                         }
                         break;
                     case 0x9:
@@ -377,17 +388,19 @@ int main() {
             --sound_timer;
         }
 
-        // 4128 + '\0'
-        char print_buffer[4129] = {0};
-        gfx_to_print_buffer(gfx, print_buffer);
+        // desenha só se mudou algo
+        if (should_draw) {
+            // 4128 + '\0'
+            char print_buffer[4129] = {0};
+            gfx_to_print_buffer(gfx, print_buffer);
 
-        reset_cursor();
-        printf("%s", print_buffer); 
-
+            reset_cursor();
+            printf("%s", print_buffer); 
+            printf("\nInput atual: %d", input);
+        }
+        
         // linux: 
-        // usleep(16660);
-        // windows:
-        Sleep(1);
+        usleep(1000);
 
         // não passa do tamanho da rom, teoricamente o máximo
         if (pc >= START_ADDRESS + size) {
