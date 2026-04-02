@@ -370,7 +370,7 @@ int main(int argc, char *argv[]) {
                             }
                             break;
                         case 0x9:
-                            index_register = memory[FONTSET_START_ADDRESS + (((opcode & 0x0F00) >> 8) * 5)];
+                            index_register = FONTSET_START_ADDRESS + ((registers[(opcode & 0x0F00) >> 8]) * 5);
                             break;
                         case 0x3:
                             {
