@@ -23,32 +23,31 @@ void disable_raw_mode() {
 
     int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
     fcntl(STDIN_FILENO, F_SETFL, flags & ~O_NONBLOCK);
-}
+} 
 
-char get_input() {
+void update_input(uint8_t* keypad) {
     int ch = getchar();
+    uint8_t* changed = &keypad[16];
     
     switch (ch) {
-        case '1': return 1;
-        case '2': return 2;
-        case '3': return 3;
-        case '4': return 12; 
+        case '1': keypad[1] = 4; *changed = 1; break;
+        case '2': keypad[2] = 4; *changed = 2; break;
+        case '3': keypad[3] = 4; *changed = 3; break;
+        case '4': keypad[12] = 4; *changed = 12; break;
         
-        case 'q': case 'Q': return 4;
-        case 'w': case 'W': return 5;
-        case 'e': case 'E': return 6;
-        case 'r': case 'R': return 13; 
+        case 'q': case 'Q': keypad[4] = 4; *changed = 4; break;
+        case 'w': case 'W': keypad[5] = 4; *changed = 5; break;
+        case 'e': case 'E': keypad[6] = 4; *changed = 6; break;
+        case 'r': case 'R': keypad[13] = 4; *changed = 13; break;
         
-        case 'a': case 'A': return 7; 
-        case 's': case 'S': return 8;
-        case 'd': case 'D': return 9;
-        case 'f': case 'F': return 14;
+        case 'a': case 'A': keypad[7] = 4; *changed = 7; break;
+        case 's': case 'S': keypad[8] = 4; *changed = 8; break;
+        case 'd': case 'D': keypad[9] = 4; *changed = 9; break;
+        case 'f': case 'F': keypad[14] = 4; *changed = 14; break;
         
-        case 'z': case 'Z': return 10; 
-        case 'x': case 'X': return 0;
-        case 'c': case 'C': return 11;
-        case 'v': case 'V': return 15;
-        
-        default: return -1;
+        case 'z': case 'Z': keypad[10] = 4; *changed = 10; break; 
+        case 'x': case 'X': keypad[0] = 4; *changed = 0; break;
+        case 'c': case 'C': keypad[11] = 4; *changed = 11; break;
+        case 'v': case 'V': keypad[15] = 4; *changed = 15; break;
     }
 }
